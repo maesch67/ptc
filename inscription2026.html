@@ -28,18 +28,20 @@ a,button,input,select{cursor:pointer}
 #UL>li:hover{background:#fff}
 </style>
 <script>
+RES={}
 SR=(o,v)=>(o=_(`[name="${o}"]`)[0])&&(o.value=v)
 AC0=e=>_`#UL`.forEach(u=>u.remove())
 AC=(o,f,k)=>{
 	if(o=_(`[name="${o}"]`)[0])o.onblur=e=>setTimeout(AC0,99),o.onkeyup=e=>{
 		k=o.value.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-		if(k.length>2)X(`//data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records?where=type_etablissement+like+%22College%22+and+${f}+like+%22${k}*%22`,R=>{
+		if(k.length<2)AC0()
+		else X(`//data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records?where=type_etablissement+like+%22College%22+and+${f}+like+%22${k}*%22`,R=>{
 			R=JSON.parse(R)
-			if(r=R.results.map(r=>`<li id=${r.identifiant_de_l_etablissement}><b>${r.nom_etablissement}</b><br>${r.code_postal} ${r.nom_commune}`).join``){
+			if(r=R.results.map(r=>(RES[id=r.identifiant_de_l_etablissement]=r)&&`<li id=${id}><b>${r.nom_etablissement}</b><br>${r.code_postal} ${r.nom_commune}`).join``){
 				AC0()
 				o.insertAdjacentHTML('afterend',`<ul id=UL>${r}</ul>`)
 				_`#UL li`.forEach(o=>o.onclick=e=>{
-					r=R.results.find(r=>r.identifiant_de_l_etablissement==o.id)
+					r=RES[o.id]
 					SR("Nom_de_votre_college",r.nom_etablissement)
 					SR("Commune_de_votre_college",r.nom_commune)
 					SR("Academie",r.libelle_academie)

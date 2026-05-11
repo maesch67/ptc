@@ -1,0 +1,108 @@
+<html><head>
+<title></title>
+<style>
+.center{text-align:center}
+.left{text-align:left}
+.right{text-align:right}
+body,main,section{padding:20px}
+body{background:linear-gradient(135deg,#efe,#dfd);margin:0}
+main{max-width:960px;border:2px solid #093;background:#fff;border-radius:6px;margin:0 auto}
+h1{margin-top:0}
+div{margin:0 0 9px}
+hr{border:1px solid #0933;margin:18px 0 4px}
+section{border:1px solid #0933;background:#eee5;margin:9px 0}
+label{padding:16px 0 3px;text-align:left;font-weight:600}
+label:has(+[required]):after{content:"*"/"champ obligatoire";color:#093;margin-left:3px}
+label:has(+[type=checkbox]){display:inline-block}
+select,input{width:100%;padding:3px 6px;font-size:14px}
+input[type=checkbox]{width:20px;height:20px;display:inline-block;margin:0 0 3px 9px;accent-color:#093;vertical-align:bottom}
+label,input{display:block}
+a{color:#062}
+a:not(:hover){text-decoration:none}
+button{border:0;border-radius:6px;background:#093;color:#fff;font-weight:500;padding:8px 20px}
+button:not(:hover){opacity:.9}
+a,button,input,select{cursor:pointer}
+.V :invalid{box-shadow:0 0 3px #f00}
+#UL{position:absolute;margin:2px 0 0;padding:0;background:#eee;border:1px solid #093;box-shadow:0 0 3px #3333}
+#UL>li{display:block;padding:4px 8px;cursor:pointer}
+#UL>li:hover{background:#fff}
+</style>
+<script>
+SR=(o,v)=>(o=_(`[name="${o}"]`)[0])&&(o.value=v)
+AC0=e=>_`#UL`.forEach(u=>u.remove())
+AC=(o,f,k)=>{
+	if(o=_(`[name="${o}"]`)[0])o.onblur=e=>setTimeout(AC0,99),o.onkeyup=e=>{
+		k=o.value.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+		if(k.length>2)X(`//data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records?where=type_etablissement+like+%22College%22+and+${f}+like+%22${k}*%22`,R=>{
+			R=JSON.parse(R)
+			if(r=R.results.map(r=>`<li id=${r.identifiant_de_l_etablissement}><b>${r.nom_etablissement}</b><br>${r.code_postal} ${r.nom_commune}`).join``){
+				AC0()
+				o.insertAdjacentHTML('afterend',`<ul id=UL>${r}</ul>`)
+				_`#UL li`.forEach(o=>o.onclick=e=>{
+					r=R.results.find(r=>r.identifiant_de_l_etablissement==o.id)
+					SR("Nom_de_votre_college",r.nom_etablissement)
+					SR("Commune_de_votre_college",r.nom_commune)
+					SR("Academie",r.libelle_academie)
+					SR("Code_UAI_du_college",o.id)})}})}}
+U="https://grist.numerique.gouv.fr/o/docs/api/s/aV7EcHUf2Tp8pAeAmt8SQc/"
+A=(o,h)=>o.insertAdjacentHTML('beforeend',h)
+M=t=>'<p>'+t.split`\n`.map(l=>l
+	.replace(/^(#+)(.*)/,(x,a,b)=>`<h${a.length}>${b}</h${a.length}>`)
+	.replace(/^[-*] +(.*)/,'<ul><li>$1</li></ul>')
+).join`\n<p>`
+	.replace(/<\/ul>\n<p><ul>/g,'')
+	.replace(/\*\*(.*?)\*\*/sg,'<b>$1</b>')
+	.replace(/!\[([^\]]*)]\(([^\)]*)\)/g,'<img src="$2" alt="$1">')
+	.replace(/\b(https?:[^\s]*)/g,'<a href="$1">$1</a>')
+	.replace(/([^\s]+@[^\s]+)/g,'<a href="mailto:$1">$1</a>')
+X=function(u,f,p){
+	var X=new XMLHttpRequest,R='setRequestHeader',k
+	X.onreadystatechange=function(){if(X.readyState===4)f(X.response)}
+	X.open(p?'POST':'GET',u)
+	if(p)X[R]('Content-type','application/x-www-form-urlencoded')
+	X.send(p)}
+X(U+'forms/6',R=>{
+R=JSON.parse(R);K=Object.keys(R)
+;[C,H,I,T]=K.map(k=>R[k])
+H=JSON.parse(H)
+_=s=>document.querySelectorAll(''+s)
+_`title,h1`.forEach(o=>o.innerHTML=T)
+B=c=>c.map(c=>
+	c.type=='Paragraph'?c.text=='---'?'<hr>':`<div class=${c.alignment}>${M(c.text)}</div>`:
+	c.type=='Submit'?`<p class=center><button type=submit>${H.submitText}</button></p>`:
+	c.type=='Section'?`<section>${B(c.children)}</section>`:
+	c.type=='Field'?(f=C[c.leaf])&&(`<label for=I${c.leaf}>${f.question}</label>`+(
+		f.type=='Choice'?`<select><option disabled selected><option>${f.options.choices.sort().join('<option>')}</select>`:
+		f.type=='Bool'?'<input type=checkbox>':
+		f.type=='Text'?
+			/(\b|_)UAI(\b|_|[0-9])/.test(f.colId)?'<input type=text pattern="^[0-9]{7}[A-Za-z]$">':
+			/(\b|_)mail(\b|_|[0-9])/.test(f.colId)?'<input type=email pattern="^[\\-A-Za-z0-9._%+]+@[\\-A-Za-z0-9.]+\\.[A-Za-z]{2,}$">':
+			'<input type=text>':
+	'').replace(/>/,` name="${f.colId}" id=I${c.leaf}`+
+		(f.options.formRequired?' required':'')+
+		((l=f.options.formTextMaximumLength)?' maxlength='+l:'')+
+	'>')):"").join``
+A(F,B(H.children))
+
+AC("Commune_de_votre_college","nom_commune")
+AC("Nom_de_votre_college","nom_etablissement")
+
+_`[type=submit]`.forEach(o=>o.onclick=e=>F.className='V')
+F.onsubmit=async e=>{
+	e.preventDefault()
+	const re=await fetch(U+'tables/'+I+'/records',{
+		method:"POST",
+		headers:{"Content-Type":"application/json"},
+		body:JSON.stringify({records:[{fields:(R={})&&_`#F [name]`.forEach(f=>R[f.name]=f.type=='checkbox'?f.checked?"1":"0":f.value)||R}]})
+	})
+	const r=await re.json()
+	F.remove()
+	A(_`main`[0],r&&r.records&&r.records[0]?M(H.successText):"Erreur !")
+	console.log(r)}
+})
+</script>
+</head><body class=center>
+<main class=left>
+<form id=F></form>
+</main>
+</body></html>

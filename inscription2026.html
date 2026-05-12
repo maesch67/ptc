@@ -32,7 +32,7 @@ RES={}
 SR=(o,v)=>(o=_(`[name="${o}"]`)[0])&&(o.value=v)
 AC0=e=>_`#UL`.forEach(u=>u.remove())
 AC=(o,f,k)=>{
-	if(o=_(`[name="${o}"]`)[0])o.onkeyup=e=>{
+	if(o=_(`[name="${o}"]`)[0])o.setAttribute('autocomplete','off'),o.onkeyup=e=>{
 		k=o.value.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
 		if(k.length<2)AC0()
 		else X(`//data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records?where=type_etablissement+like+%22College%22+and+${f}+like+%22${k}*%22`,R=>{
